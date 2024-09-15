@@ -23,6 +23,7 @@ function getURLsFromHTML(htmlBody, baseURL) {
             let href = anchor.getAttribute('href')
 
             try {
+                // convert any relative URLS to the absolute URLS
                 href = new URL(href, baseURL).href
                 urls.push(href)
             } catch (error) {
