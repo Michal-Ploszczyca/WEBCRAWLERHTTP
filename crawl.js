@@ -1,7 +1,7 @@
 import { urlToHttpOptions } from "url"
-export {normalizeURL};
+export {normalizeURL, getURLsFromHTML, crawlPage};
 import { JSDOM } from 'jsdom'
-export {getURLsFromHTML}
+
 
 function normalizeURL(fullUrl) {
     const myUrl = new URL(fullUrl)
@@ -35,7 +35,36 @@ function getURLsFromHTML(htmlBody, baseURL) {
 
     return urls
 
+}
+async function crawlPage(currentURL) {
+    console.log(`Crawling: ${currentURL}`)
 
+   let response
+    try {
+        response = await fetch(currentURL)
+
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            return
+        }
+
+        if (response.status > 399) {
+            throw new Error(`Got an network error: ${response.status} ${response.statusText}`)
+        }
+
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('text/html')) {
+            throw new Error(`Got non HTML response: ${contentType}`);
+            return
+            
+        }
+        
+    } catch (error) {
+        console.log(error.message);
+    }
+
+    console.log(await response.text());
+    
 }
 
 
