@@ -36,12 +36,11 @@ function getURLsFromHTML(htmlBody, baseURL) {
     return urls
 
 }
-async function crawlPage(currentURL) {
-    console.log(`Crawling: ${currentURL}`)
 
-   let response
+async function fetchAndParseHTML(url) {
+    let response
     try {
-        response = await fetch(currentURL)
+        response = await fetch(url)
 
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
@@ -58,13 +57,43 @@ async function crawlPage(currentURL) {
             return
             
         }
+
+        return await response.text(); // Return HTML body
         
     } catch (error) {
         console.log(error.message);
+        return null; // Return null in case of errror
     }
 
-    console.log(await response.text());
+}
+
+
+async function crawlPage(baseURL, currentURL = baseURL, pages = {}) {
+    console.log(`Crawling: ${currentURL}`)
+    if (new URL(currentURL).hostname !== new URL(baseURL).hostname) {
+        return pages;
+    }
+
+    const normalizedURL = normalizeURL(currentURL);
+
+    if (pages[normalizedURL]) {
+        pages[normalizedURL]++;
+        return pages;
+    }
+
+    pages[normalizedURL] = 1;
+
+    const htmlBody = await fetchAndParseHTML(currentURL); // Await result of fetch API
+    if (!htmlBody) return pages;
     
+    const foundURLs = getURLsFromHTML(htmlBody, baseURL); // pass base url if needed for relative urls
+    
+    for (const url of foundURLs) {
+        pages = await crawlPage(baseURL, url, pages); // Recursively crawl each found URL
+    }
+
+    // console.log(pages);
+    return pages;
 }
 
 
